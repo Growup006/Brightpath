@@ -9,7 +9,7 @@ const router = express.Router();
 // ---- SIGNUP ----
 // role: 'student' -> requires class, learning_style, optional parentEmail to link
 // role: 'parent'  -> creates a parent account only
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, role, class: studentClass, learningStyle, parentEmail } = req.body;
 
@@ -23,35 +23,39 @@ router.post('/signup', (req, res) => {
       return res.status(400).json({ error: 'class must be 6, 7, or 8 for students' });
     }
 
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-    if (existing) {
+    const existingResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingResult.rows.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
     let parentId = null;
     if (role === 'student' && parentEmail) {
-      const parent = db.prepare("SELECT id FROM users WHERE email = ? AND role = 'parent'").get(parentEmail);
-      if (parent) parentId = parent.id;
+      const parentResult = await db.query(
+        "SELECT id FROM users WHERE email = $1 AND role = 'parent'",
+        [parentEmail]
+      );
+      if (parentResult.rows.length > 0) parentId = parentResult.rows[0].id;
     }
 
     const passwordHash = bcrypt.hashSync(password, 10);
 
-    const insert = db.prepare(`
-      INSERT INTO users (name, email, password_hash, role, class, learning_style, parent_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    const result = insert.run(
-      name,
-      email,
-      passwordHash,
-      role,
-      role === 'student' ? Number(studentClass) : null,
-      role === 'student' ? (learningStyle || 'standard') : null,
-      parentId
+    const insertResult = await db.query(
+      `INSERT INTO users (name, email, password_hash, role, class, learning_style, parent_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
+      [
+        name,
+        email,
+        passwordHash,
+        role,
+        role === 'student' ? Number(studentClass) : null,
+        role === 'student' ? (learningStyle || 'standard') : null,
+        parentId,
+      ]
     );
 
     const user = {
-      id: result.lastInsertRowid,
+      id: insertResult.rows[0].id,
       name,
       email,
       role,
@@ -73,14 +77,15 @@ router.post('/signup', (req, res) => {
 });
 
 // ---- LOGIN ----
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'email and password are required' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }

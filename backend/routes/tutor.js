@@ -82,7 +82,8 @@ router.post('/ask', async (req, res) => {
       return res.status(400).json({ error: 'subject must be one of: ' + NCERT_SUBJECTS.join(', ') });
     }
 
-    const student = db.prepare('SELECT class, learning_style FROM users WHERE id = ?').get(req.user.id);
+    const studentResult = await db.query('SELECT class, learning_style FROM users WHERE id = $1', [req.user.id]);
+    const student = studentResult.rows[0];
     const studentClass = classLevel || (student && student.class) || 6;
     const learningStyle = (student && student.learning_style) || 'standard';
 
@@ -103,8 +104,10 @@ router.post('/ask', async (req, res) => {
         .join('\n');
     }
 
-    db.prepare('INSERT INTO tutor_conversations (student_id, subject, question, answer) VALUES (?, ?, ?, ?)')
-      .run(req.user.id, subject, question, answer);
+    await db.query(
+      'INSERT INTO tutor_conversations (student_id, subject, question, answer) VALUES ($1, $2, $3, $4)',
+      [req.user.id, subject, question, answer]
+    );
 
     res.json({ answer: answer });
   } catch (err) {
@@ -113,13 +116,24 @@ router.post('/ask', async (req, res) => {
   }
 });
 
-router.get('/history', (req, res) => {
-  const subject = req.query.subject;
-  const rows = subject
-    ? db.prepare('SELECT * FROM tutor_conversations WHERE student_id = ? AND subject = ? ORDER BY created_at DESC LIMIT 50').all(req.user.id, subject)
-    : db.prepare('SELECT * FROM tutor_conversations WHERE student_id = ? ORDER BY created_at DESC LIMIT 50').all(req.user.id);
+router.get('/history', async (req, res) => {
+  try {
+    const subject = req.query.subject;
+    const result = subject
+      ? await db.query(
+          'SELECT * FROM tutor_conversations WHERE student_id = $1 AND subject = $2 ORDER BY created_at DESC LIMIT 50',
+          [req.user.id, subject]
+        )
+      : await db.query(
+          'SELECT * FROM tutor_conversations WHERE student_id = $1 ORDER BY created_at DESC LIMIT 50',
+          [req.user.id]
+        );
 
-  res.json({ history: rows });
+    res.json({ history: result.rows });
+  } catch (err) {
+    console.error('Tutor history fetch error:', err);
+    res.status(500).json({ error: 'Failed to fetch tutor history' });
+  }
 });
 
 module.exports = router;

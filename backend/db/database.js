@@ -1,15 +1,21 @@
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, 'brightpath.db');
-const db = new Database(DB_PATH);
-
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // required for Neon
+});
 
 // Run schema on startup (idempotent — CREATE TABLE IF NOT EXISTS)
-const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-db.exec(schema);
+async function initSchema() {
+  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  await pool.query(schema);
+}
 
-module.exports = db;
+initSchema().catch((err) => {
+  console.error('Failed to initialize schema:', err);
+  process.exit(1);
+});
+
+module.exports = pool;
