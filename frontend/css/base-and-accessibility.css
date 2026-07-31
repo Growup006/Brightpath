@@ -1,0 +1,194 @@
+
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --sun:#FF8C42;--sun-light:#FFF0E0;--sun-mid:#FFB366;
+  --sky:#378ADD;--sky-light:#E6F1FB;
+  --leaf:#1D9E75;--leaf-light:#E1F5EE;
+  --plum:#7F77DD;--plum-light:#EEEDFE;
+  --rose:#D4537E;--rose-light:#FBEAF0;
+  --amber:#EF9F27;--amber-light:#FAEEDA;
+  --bg:#FFF8F2;--white:#FFFFFF;
+  --text:#2A2118;--muted:#8A7F78;--border:rgba(0,0,0,0.09);
+  --radius:18px;--radius-sm:12px;--radius-xs:8px;
+  --font:'Nunito',sans-serif;--font-d:'Baloo 2',cursive;
+  --shadow:0 4px 20px rgba(0,0,0,0.08);
+  --shadow-hover:0 8px 30px rgba(0,0,0,0.14);
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;}
+
+/* ════════════════════════════════════════════════════════════
+   HIGH CONTRAST MODE — full structural override, not a palette swap.
+   Every rule below exists to satisfy one test: if printed in black
+   & white, everything must still be fully readable.
+   ════════════════════════════════════════════════════════════ */
+body.high-contrast{
+  --bg:#FFFFFF;--white:#FFFFFF;
+  --text:#000000;--muted:#000000;--border:#000000;
+  /* One accent color only, used minimally (badges, active states, links) */
+  --sun:#B35400;--sun-light:#FFFFFF;
+  --sky:#000000;--sky-light:#FFFFFF;
+  --leaf:#000000;--leaf-light:#FFFFFF;
+  --plum:#000000;--plum-light:#FFFFFF;
+  --rose:#000000;--rose-light:#FFFFFF;
+  --amber:#B35400;--amber-light:#FFFFFF;
+  --radius:4px;--radius-sm:4px;--radius-xs:2px;
+  --shadow:none;--shadow-hover:none;
+}
+
+/* 1. Kill every gradient and shadow, everywhere, no exceptions. */
+body.high-contrast *{
+  background-image:none !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+}
+
+/* 2. Base typography: bold weight, black text, no faded/muted text anywhere. */
+body.high-contrast, body.high-contrast * {
+  color:#000000;
+  font-weight:600;
+}
+body.high-contrast h1, body.high-contrast h2, body.high-contrast h3, body.high-contrast h4{
+  font-weight:800;
+}
+
+/* 3. Cards / panels: white bg, solid 2px black border, no shadow, clear spacing. */
+body.high-contrast .panel,
+body.high-contrast .profile-pill,
+body.high-contrast .portal-pick,
+body.high-contrast .pt-card,
+body.high-contrast .cond-pill,
+body.high-contrast .greet-card,
+body.high-contrast .focus-card,
+body.high-contrast .pred-card,
+body.high-contrast .msg-bubble,
+body.high-contrast .mia-bubble,
+body.high-contrast [class*="-card"]{
+  background:#FFFFFF !important;
+  border:2px solid #000000 !important;
+  border-radius:4px;
+  padding:16px;
+  margin-bottom:12px;
+}
+/* Reveal card keeps a DASHED border while unanswered, SOLID once revealed —
+   a shape-based state signal so the state isn't communicated by color alone. */
+body.high-contrast .gn-reveal-card{
+  border-style:dashed !important;
+}
+body.high-contrast .gn-reveal-card.flipped{
+  border-style:solid !important;
+}
+
+/* 4. Buttons — filled OR outlined, with a hard color-invert on hover. */
+body.high-contrast button,
+body.high-contrast .tb-btn,
+body.high-contrast input[type="button"],
+body.high-contrast input[type="submit"]{
+  background:#FFFFFF;
+  color:#000000;
+  border:2px solid #000000 !important;
+  border-radius:4px;
+  font-weight:700;
+}
+/* Primary actions: filled black / white text */
+body.high-contrast .gn-btn-next,
+body.high-contrast .btn-primary,
+body.high-contrast button[class*="primary"]{
+  background:#000000 !important;
+  color:#FFFFFF !important;
+}
+body.high-contrast button:hover,
+body.high-contrast .tb-btn:hover{
+  background:#000000 !important;
+  color:#FFFFFF !important;
+}
+body.high-contrast .gn-btn-next:hover,
+body.high-contrast .btn-primary:hover{
+  background:#FFFFFF !important;
+  color:#000000 !important;
+}
+body.high-contrast button:disabled{
+  background:#FFFFFF !important;
+  color:#000000 !important;
+  border:2px dashed #000000 !important;
+  opacity:1;
+}
+
+/* 5. Sidebar: white bg, active item filled black/white text, inactive outlined. */
+body.high-contrast .sidebar, body.high-contrast .sb-bottom{
+  background:#FFFFFF !important;
+  border-right:2px solid #000000;
+}
+body.high-contrast .sb-item{
+  background:#FFFFFF !important;
+  color:#000000 !important;
+  border:2px solid #000000 !important;
+  margin-bottom:4px;
+  border-radius:4px;
+}
+body.high-contrast .sb-item.active{
+  background:#000000 !important;
+  color:#FFFFFF !important;
+  border:2px solid #000000 !important;
+}
+
+/* 6. Top banner (was a gradient orange card): solid accent, black text, black border. */
+body.high-contrast .greet-card{
+  background:#FFD9A8 !important; /* light tint of the single accent, not a gradient */
+  color:#000000 !important;
+  border:2px solid #000000 !important;
+}
+
+/* 7. Progress / stat numbers: bold black, never color-only. */
+body.high-contrast .stat-num, body.high-contrast [id^="stat-"], body.high-contrast [class*="stat"]{
+  color:#000000 !important;
+  font-weight:800 !important;
+}
+
+/* 8. Focus states: thick black outline, always visible. */
+body.high-contrast *:focus,
+body.high-contrast *:focus-visible{
+  outline:3px solid #000000 !important;
+  outline-offset:2px;
+}
+
+/* 9. Links: always underlined, never color-only. */
+body.high-contrast a{
+  color:#000000 !important;
+  text-decoration:underline !important;
+  font-weight:700;
+}
+
+/* 10. Kill pastel chip backgrounds — pills/badges become outlined, not tinted. */
+body.high-contrast .profile-pill,
+body.high-contrast .cond-pill,
+body.high-contrast .gn-pace-hint,
+body.high-contrast .pref-caption{
+  background:#FFFFFF !important;
+  color:#000000 !important;
+  border:2px solid #000000 !important;
+}
+/* The single accent is allowed only on small, meaningful badges — used minimally. */
+body.high-contrast .profile-pill:nth-child(2){
+  border-color:#B35400 !important;
+  color:#B35400 !important;
+}
+
+/* 11. Toggle switches: clear on/off state without relying on color alone. */
+body.focus-mode #sb-child{display:none !important;}
+body.high-contrast .acc-switch{
+  background:#FFFFFF !important;
+  border:2px solid #000000 !important;
+  border-radius:20px;
+}
+body.high-contrast .acc-switch::after{
+  background:#000000 !important;
+  box-shadow:none !important;
+}
+body.high-contrast .acc-switch:checked{
+  background:#000000 !important;
+}
+body.high-contrast .acc-switch:checked::after{
+  background:#FFFFFF !important;
+}
+
+
