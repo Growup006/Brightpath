@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const progressRoutes = require('./routes/progress');
 const parentRoutes = require('./routes/parent');
 const tutorRoutes = require('./routes/tutor');
+const geminiTutorRoutes = require('./routes/gemini-tutor');
 
 if (!process.env.JWT_SECRET) {
   console.error('Missing JWT_SECRET in .env — set one before starting the server.');
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/parent', parentRoutes);
 app.use('/api/tutor', tutorRoutes);
+app.use('/api/gemini-tutor', geminiTutorRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
