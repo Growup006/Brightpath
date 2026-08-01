@@ -60,8 +60,7 @@ function sendChip(btn){
 
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
-var TUTOR_API_URL = 'https://brightpath-tutor.YOUR-SUBDOMAIN.workers.dev';
-
+var TUTOR_API_URL = 'https://brightpath-sgd4.onrender.com/api/gemini-tutor';
 async function callClaude(userMsg){
   // Build Gemini contents array (user/model alternating)
   var contents = [];
