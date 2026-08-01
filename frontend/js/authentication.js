@@ -17,7 +17,62 @@ function applyClassFilter(classNum) {
   updateHomeUI();
 }
 
+var AUTH_API_URL = 'https://brightpath-sgd4.onrender.com/api/auth';
+
 function doLogin() {
+  var emailEl = document.getElementById('login-email');
+  var passEl  = document.getElementById('login-pass');
+  var errEl   = document.getElementById('login-error');
+  var btn     = document.querySelector('#login-form .btn-full');
+  var email = emailEl ? emailEl.value.trim() : '';
+  var pass  = passEl  ? passEl.value.trim()  : '';
+
+  if(errEl) { errEl.textContent=''; errEl.style.display='none'; }
+  if(emailEl) emailEl.style.border='';
+  if(passEl)  passEl.style.border='';
+
+  function showErr(msg, highlightEl) {
+    if(errEl) { errEl.innerHTML='⚠️ ' + msg; errEl.style.display='block'; }
+    if(highlightEl) highlightEl.style.border='2px solid #e74c3c';
+    if(highlightEl) highlightEl.focus();
+  }
+
+  if(!email) { showErr('Please enter your email address.', emailEl); return; }
+  if(!email.includes('@')) { showErr('Please enter a valid email address.', emailEl); return; }
+  if(!pass)  { showErr('Please enter your password.', passEl); return; }
+  if(pass.length < 6) { showErr('Password must be at least 6 characters.', passEl); return; }
+
+  if(btn) { btn.textContent='Signing in…'; btn.disabled=true; }
+  function resetBtn() { if(btn) { btn.textContent='Sign In ✨'; btn.disabled=false; } }
+
+  fetch(AUTH_API_URL + '/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email, password: pass })
+  })
+  .then(function(r){ return r.json().then(function(data){ return {status:r.status, data:data}; }); })
+  .then(function(res){
+    resetBtn();
+    if(res.status !== 200){
+      showErr(res.data.error || 'Login failed. Please try again.', passEl);
+      return;
+    }
+    var data = res.data;
+    localStorage.setItem('bp_token', data.token);
+    CURRENT_USER.id        = data.user.id;
+    CURRENT_USER.name      = data.user.name;
+    CURRENT_USER.email     = data.user.email;
+    CURRENT_USER.role      = data.user.role;
+    CURRENT_USER.classNum  = data.user.class ? String(data.user.class) : '6';
+    CURRENT_USER.learningStyle = data.user.learningStyle || '';
+    saveUserLocal();
+    onLoginSuccess();
+  })
+  .catch(function(err){
+    resetBtn();
+    showErr('Network error. Please check your connection and try again.');
+  });
+}
   var emailEl = document.getElementById('login-email');
   var passEl  = document.getElementById('login-pass');
   var errEl   = document.getElementById('login-error');
@@ -208,6 +263,83 @@ function localLogin(email, pass, showErr) {
 }
 
 function doRegister() {
+  var nameEl        = document.getElementById('rg-name');
+  var emailEl       = document.getElementById('rg-email');
+  var passEl        = document.getElementById('rg-pass');
+  var clsEl         = document.getElementById('rg-class');
+  var parentEmailEl = document.getElementById('rg-parent-email');
+
+  var name        = nameEl        ? nameEl.value.trim()        : '';
+  var email       = emailEl       ? emailEl.value.trim()       : '';
+  var pass        = passEl        ? passEl.value.trim()        : '';
+  var cls         = clsEl         ? clsEl.value.trim()         : '6';
+  var parentEmail = parentEmailEl ? parentEmailEl.value.trim() : '';
+  var pills       = Array.from(document.querySelectorAll('.rg-pill.on')).map(function(p){ return p.dataset.val || p.textContent.trim(); });
+  var learningStyle = pills.join(', ');
+  var btn = document.querySelector('#s-register .btn-full, #s-register button[type="submit"], #rg-submit-btn');
+
+  if(!name || !email || !pass || !cls || !parentEmail || pills.length === 0) {
+    alert('⚠️ Please complete all required fields before continuing.');
+    RG.goStep(2);
+    return;
+  }
+
+  var classNum = parseInt(cls.replace('Class ',''), 10);
+
+  function resetRegBtn() { if(btn) { btn.textContent='Create My Account ✨'; btn.disabled=false; } }
+  function showRegErr(msg) {
+    var errEl = document.getElementById('rg-error');
+    if(errEl) { errEl.innerHTML='⚠️ ' + msg; errEl.style.display='block'; }
+    else alert(msg);
+  }
+
+  if(btn) { btn.textContent='Creating account…'; btn.disabled=true; }
+
+  fetch(AUTH_API_URL + '/signup', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      password: pass,
+      role: 'student',
+      class: classNum,
+      learningStyle: learningStyle,
+      parentEmail: parentEmail
+    })
+  })
+  .then(function(r){ return r.json().then(function(data){ return {status:r.status, data:data}; }); })
+  .then(function(res){
+    resetRegBtn();
+    if(res.status !== 201){
+      showRegErr(res.data.error || 'Registration failed. Please try again.');
+      return;
+    }
+    var data = res.data;
+    localStorage.setItem('bp_token', data.token);
+    CURRENT_USER.id            = data.user.id;
+    CURRENT_USER.name          = data.user.name;
+    CURRENT_USER.email         = data.user.email;
+    CURRENT_USER.role          = data.user.role;
+    CURRENT_USER.classNum      = data.user.class ? String(data.user.class) : '6';
+    CURRENT_USER.parentEmail   = parentEmail;
+    CURRENT_USER.learningStyle = data.user.learningStyle || learningStyle;
+    CURRENT_USER.streak        = 0;
+    CURRENT_USER.badges        = 0;
+    CURRENT_USER.stars         = 0;
+    CURRENT_USER.progress      = {};
+    CURRENT_USER.prefs = CURRENT_USER.prefs || {};
+    CURRENT_USER.prefs.dyslexia = pills.indexOf('Dyslexia') !== -1;
+
+    rgClearProgress();
+    saveUserLocal();
+    onLoginSuccessAfterRegister();
+  })
+  .catch(function(err){
+    resetRegBtn();
+    showRegErr('Network error. Please check your connection and try again.');
+  });
+}
   var nameEl        = document.getElementById('rg-name');
   var emailEl       = document.getElementById('rg-email');
   var passEl        = document.getElementById('rg-pass');
