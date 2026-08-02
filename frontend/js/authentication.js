@@ -235,6 +235,66 @@ function doRegister() {
     showRegErr('Network error. Please check your connection and try again.');
   });
 }
+function doRegisterOtherRole(role) {
+  var nameEl  = document.getElementById('rg-name');
+  var emailEl = document.getElementById('rg-email');
+  var passEl  = document.getElementById('rg-pass');
+
+  var name  = nameEl  ? nameEl.value.trim()  : '';
+  var email = emailEl ? emailEl.value.trim() : '';
+  var pass  = passEl  ? passEl.value.trim()  : '';
+
+  var btn = document.querySelector('#s-register .btn-full, #s-register button[type="submit"], #rg-submit-btn');
+
+  if(!name || !email || !pass) {
+    alert('⚠️ Please complete all required fields before continuing.');
+    RG.goStep(2);
+    return;
+  }
+
+  function resetRegBtn() { if(btn) { btn.textContent='Create My Account ✨'; btn.disabled=false; } }
+  function showRegErr(msg) {
+    var errEl = document.getElementById('rg-error');
+    if(errEl) { errEl.innerHTML='⚠️ ' + msg; errEl.style.display='block'; }
+    else alert(msg);
+  }
+
+  if(btn) { btn.textContent='Creating account…'; btn.disabled=true; }
+
+  fetch(AUTH_API_URL + '/signup', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      password: pass,
+      role: role
+    })
+  })
+  .then(function(r){ return r.json().then(function(data){ return {status:r.status, data:data}; }); })
+  .then(function(res){
+    resetRegBtn();
+    if(res.status !== 201){
+      showRegErr(res.data.error || 'Registration failed. Please try again.');
+      return;
+    }
+    var data = res.data;
+    localStorage.setItem('bp_token', data.token);
+    CURRENT_USER.id    = data.user.id;
+    CURRENT_USER.name  = data.user.name;
+    CURRENT_USER.email = data.user.email;
+    CURRENT_USER.role  = data.user.role;
+
+    currentRole = role;
+    rgClearProgress();
+    saveUserLocal();
+    onLoginSuccessAfterRegister();
+  })
+  .catch(function(err){
+    resetRegBtn();
+    showRegErr('Network error. Please check your connection and try again.');
+  });
+}
 
 function onLoginSuccess() {
   updateStreak();

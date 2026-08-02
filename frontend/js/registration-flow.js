@@ -70,8 +70,7 @@ var RG = {
     if(RG.role === 'child') {
       doRegister();
     } else {
-      var map = {parent:'s-parent',teacher:'s-teacher',admin:'s-admin'};
-      showScreen(map[RG.role]||'s-child');
+      doRegisterOtherRole(RG.role);
     }
   },
 
@@ -162,6 +161,12 @@ var RG = {
           var existing = JSON.parse(localStorage.getItem('bp_accounts')||'{}');
           if(existing[email.trim()]) { rgErr('This email is already registered. Please sign in instead.', document.getElementById('rg-email')); return; }
         } catch(e){}
+      } else {
+        if(!name.trim())              { rgErr('Full name is required.', document.getElementById('rg-name')); return; }
+        if(!email.trim())             { rgErr('Email address is required.', document.getElementById('rg-email')); return; }
+        if(!email.includes('@'))      { rgErr('Please enter a valid email address.', document.getElementById('rg-email')); return; }
+        if(!pass.trim())              { rgErr('Password is required.', document.getElementById('rg-pass')); return; }
+        if(pass.trim().length < 6)    { rgErr('Password must be at least 6 characters.', document.getElementById('rg-pass')); return; }
       }
       RG.goStep(3);
     });
