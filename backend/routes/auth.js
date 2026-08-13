@@ -16,8 +16,8 @@ router.post('/signup', async (req, res) => {
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'name, email, password, role are required' });
     }
-    if (!['student', 'parent'].includes(role)) {
-      return res.status(400).json({ error: "role must be 'student' or 'parent'" });
+    if (!['student', 'parent', 'teacher', 'admin'].includes(role)) {
+      return res.status(400).json({ error: "role must be 'student', 'parent', 'teacher', or 'admin'" });
     }
     if (role === 'student' && ![6, 7, 8].includes(Number(studentClass))) {
       return res.status(400).json({ error: 'class must be 6, 7, or 8 for students' });

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK(role IN ('student','parent')) DEFAULT 'student',
+ role TEXT NOT NULL CHECK(role IN ('student','parent','teacher','admin')) DEFAULT 'student',
   class INTEGER,                    -- 6/7/8, students only
   learning_style TEXT,              -- 'dyslexia' | 'standard'
   parent_id INTEGER,                -- students only, FK -> users.id (parent)
