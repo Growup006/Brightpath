@@ -298,10 +298,12 @@ function closeMobNav(){document.getElementById('mob-nav').classList.remove('open
 
 function openLesson(subject,topic,profile){
   currentLesson={subject,topic,profile};
-  document.getElementById('ls-subject-pill').textContent='📚 '+subject;
-  document.getElementById('ls-topic').textContent=topic;
+  var displaySubject = subject === 'General' ? 'Ask Me Anything' : subject;
+  var displayTopic = topic === 'General' ? 'Ask Me Anything' : topic;
+  document.getElementById('ls-subject-pill').textContent='💬 '+displaySubject;
+  document.getElementById('ls-topic').textContent=displayTopic;
   document.getElementById('ls-level').textContent='Class '+currentChildClass+' · '+profile;
-  document.getElementById('lesson-title').textContent=topic;
+  document.getElementById('lesson-title').textContent=displayTopic;
   var pills=document.getElementById('ls-profile-pills');
   pills.innerHTML='';
   if(profile.includes('ADHD'))pills.innerHTML+='<div class="profile-pill" style="background:var(--sky-light);color:var(--sky);">⚡ ADHD</div>';
